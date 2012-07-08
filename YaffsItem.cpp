@@ -51,6 +51,8 @@ YaffsItem::YaffsItem(YaffsItem* parent, const QString& name, yaffs_obj_type type
     mYaffsObjectId = -1;
 
     mCondition = NEW;
+    mMarkedForDelete = false;
+    mHasChildMarkedForDelete = false;
 }
 
 YaffsItem::~YaffsItem() {
