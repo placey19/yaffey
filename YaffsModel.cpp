@@ -68,59 +68,79 @@ YaffsReadInfo YaffsModel::openImage(const QString& imageFilename) {
 //get the YaffsItem at the given internal path or create the path and return a new item.
 //will return null if root doesn't exist
 YaffsItem* YaffsModel::pathToItem(const QString& path) {
-    YaffsItem* parent = mYaffsRoot;
-    if (parent != NULL) {
+    YaffsItem* parentItem = mYaffsRoot;
+    if (parentItem != NULL) {
         QStringList parentDirNames = path.split('/');
-        for (int i = 0; i < parentDirNames.length() - 1; ++i) {
+        for (int i = 0; i < parentDirNames.length(); ++i) {
             QString dirName = parentDirNames[i];
-            qDebug() << dirName;
-/*
-            YaffsItem* child = parent->findDirWithName(dirName);
-            if (child != NULL) {
-                //found directory
-                parent = child;
-            } else {
-                //need to create directory
-            }*/
+            if (dirName.length() > 0) {
+                YaffsItem* childItem = parentItem->findItemWithName(dirName);
+                if (childItem != NULL) {
+                    //found item
+                    parentItem = childItem;
+                } else {
+                    //need to create directory
+                    YaffsItem* newDir = YaffsItem::createDirectory(parentItem, dirName);
+                    parentItem->appendChild(newDir);
+                    mItemsNew++;
+                    parentItem = newDir;
+                }
+            }
         }
     }
+    return parentItem;
 }
 
-void YaffsModel::importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath) {
+YaffsItem* YaffsModel::importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath) {
     qDebug() << "externalFilenameWithPath: " << externalFilenameWithPath << ", internalFilenameWithPath: " << internalFilenameWithPath;
 
+    YaffsItem* importedFile = NULL;
     QString path = "/";
+    QString fileName;
     int slash = internalFilenameWithPath.lastIndexOf('/');
     if (slash >= 0) {
         path = internalFilenameWithPath.left(slash);
+        int len = internalFilenameWithPath.length();
+        fileName = internalFilenameWithPath.right(len - (slash + 1));
     }
 
     YaffsItem* parentItem = pathToItem(path);
     if (parentItem != NULL) {
-        importFile(parentItem, externalFilenameWithPath);
+        //check to make sure a file of the same name doesn't already exist
+        if (parentItem->findItemWithName(fileName) == NULL) {
+            importedFile = importFile(parentItem, externalFilenameWithPath);
+            importedFile->setName(fileName);
+        }
     }
+
+    return importedFile;
 }
 
-void YaffsModel::importFile(YaffsItem* parentItem, const QString& filenameWithPath) {
+YaffsItem* YaffsModel::importFile(YaffsItem* parentItem, const QString& filenameWithPath) {
+    YaffsItem* importedFile = NULL;
     if (parentItem && filenameWithPath.length() > 0) {
         QFileInfo fileInfo(filenameWithPath);
-        int filesize = fileInfo.size();
+        if (fileInfo.exists()) {
+            importedFile = YaffsItem::createFile(parentItem, filenameWithPath, fileInfo.size());
+            parentItem->appendChild(importedFile);
+            mItemsNew++;
 
-        YaffsItem* importedFile = YaffsItem::createFile(parentItem, filenameWithPath, filesize);
-        parentItem->appendChild(importedFile);
-
-        mItemsNew++;
-        emit layoutChanged();
+            emit layoutChanged();
+        }
     }
+    return importedFile;
 }
 
-void YaffsModel::importDirectory(YaffsItem* parentItem, const QString& directoryName) {
-    if (parentItem && directoryName.length() > 0) {
-        YaffsItem* newDir = YaffsItem::createDirectory(parentItem, directoryName);
+void YaffsModel::importDirectory(YaffsItem* parentItem, const QString& externalDirNameWithPath) {
+    if (parentItem && externalDirNameWithPath.length() > 0) {
+        int slashPos = externalDirNameWithPath.lastIndexOf('/');
+        QString dirName = externalDirNameWithPath.mid(slashPos + 1);
+
+        YaffsItem* newDir = YaffsItem::createDirectory(parentItem, dirName);
         parentItem->appendChild(newDir);
         mItemsNew++;
 
-        QDirIterator dirs(directoryName, QDirIterator::NoIteratorFlags);
+        QDirIterator dirs(externalDirNameWithPath, QDirIterator::NoIteratorFlags);
         while (dirs.hasNext()) {
             QFileInfo fileInfo(dirs.next());
             QString fileName = fileInfo.fileName();

@@ -85,11 +85,9 @@ YaffsItem* YaffsItem::createFile(YaffsItem* parentItem, const QString& filenameW
     return item;
 }
 
-YaffsItem* YaffsItem::createDirectory(YaffsItem* parentItem, const QString& dirNameWithPath) {
-    int slashPos = dirNameWithPath.lastIndexOf('/');
-    QString dirName = dirNameWithPath.mid(slashPos + 1);
-
+YaffsItem* YaffsItem::createDirectory(YaffsItem* parentItem, const QString& dirName) {
     YaffsItem* item = new YaffsItem(parentItem, dirName, YAFFS_OBJECT_TYPE_DIRECTORY);
+
     const yaffs_obj_hdr& parentHeader = parentItem->getHeader();
     item->mYaffsObjectHeader.parent_obj_id = parentItem->mYaffsObjectId;
     item->mYaffsObjectHeader.yst_mode = parentHeader.yst_mode;
@@ -268,6 +266,16 @@ void YaffsItem::markForDelete() {
         }
         parent = parent->mParentItem;
     }
+}
+
+YaffsItem* YaffsItem::findItemWithName(const QString& itemName) {
+    for (int i = 0; i < mChildItems.count(); ++i) {
+        YaffsItem* childItem = mChildItems.at(i);
+        if (itemName.compare(childItem->getName()) == 0) {
+            return childItem;
+        }
+    }
+    return NULL;
 }
 
 void YaffsItem::makeDirty() {

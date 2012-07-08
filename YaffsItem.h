@@ -71,12 +71,29 @@ public:
 
     static YaffsItem* createRoot();
     static YaffsItem* createFile(YaffsItem* parentItem, const QString& filenameWithPath, int filesize);
-    static YaffsItem* createDirectory(YaffsItem* parentItem, const QString& dirNameWithPath);
+    static YaffsItem* createDirectory(YaffsItem* parentItem, const QString& externalDirNameWithPath);
     static YaffsItem* createSymLink(YaffsItem* parentItem, const QString& filename, const QString& alias, uint uid = 0, uint gid = 0, uint permissions = 0777);
 
     QVariant data(int column) const;
     int row() const;
-    QString getFullPath() const;
+    void appendChild(YaffsItem* child) { mChildItems.append(child); }
+    void removeChild(int row);
+    void clear() { mChildItems.clear(); }
+    int childCount() const { return mChildItems.count(); }
+    YaffsItem* parent() { return mParentItem; }
+    const YaffsItem* parent() const { return mParentItem; }
+    YaffsItem* child(int row) { return mChildItems.value(row); }
+    const YaffsItem* child(int row) const { return mChildItems.value(row); }
+    void markForDelete();
+    bool hasChildMarkedForDelete() { return mHasChildMarkedForDelete; }
+    YaffsItem* findItemWithName(const QString& itemName);
+
+    bool isRoot() const { return (mParentItem == NULL); }
+    bool isDir() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_DIRECTORY; }
+    bool isFile() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_FILE; }
+    bool isSymLink() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_SYMLINK; }
+    bool isMarkedForDelete() { return mMarkedForDelete; }
+
     void setName(const QString& name);
     void setPermissions(uint permissions);
     void setAlias(const QString& name);
@@ -86,19 +103,9 @@ public:
     void setObjectId(int objectId) { mYaffsObjectId = objectId; }
     void setParentObjectId(int parentObjectId) { mYaffsObjectHeader.parent_obj_id = parentObjectId; }
     void setHeaderPosition(int headerPos) { mHeaderPosition = headerPos; }
-    void markForDelete();
     void setHasChildMarkedForDelete(bool mark) { mHasChildMarkedForDelete = mark; }
-    bool isMarkedForDelete() { return mMarkedForDelete; }
-    bool hasChildMarkedForDelete() { return mHasChildMarkedForDelete; }
 
-    void appendChild(YaffsItem* child) { mChildItems.append(child); }
-    void removeChild(int row);
-    void clear() { mChildItems.clear(); }
-    int childCount() const { return mChildItems.count(); }
-    YaffsItem* parent() { return mParentItem; }
-    const YaffsItem* parent() const { return mParentItem; }
-    YaffsItem* child(int row) { return mChildItems.value(row); }
-    const YaffsItem* child(int row) const { return mChildItems.value(row); }
+    QString getFullPath() const;
     QString getName() const { return mYaffsObjectHeader.name; }
     QString getExternalFilename() const { return mExternalFilename; }
     QString getAlias() const { return mYaffsObjectHeader.alias; }
@@ -109,10 +116,6 @@ public:
     uint getGroupId() const { return mYaffsObjectHeader.yst_gid; }
     uint getPermissions() const { return mYaffsObjectHeader.yst_mode; }
     int getObjectId() const { return mYaffsObjectId; }
-    bool isRoot() const { return (mParentItem == NULL); }
-    bool isDir() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_DIRECTORY; }
-    bool isFile() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_FILE; }
-    bool isSymLink() const { return mYaffsObjectHeader.type == YAFFS_OBJECT_TYPE_SYMLINK; }
     Condition getCondition() const { return mCondition; }
 
 private:

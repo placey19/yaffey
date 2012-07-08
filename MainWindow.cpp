@@ -434,46 +434,59 @@ void MainWindow::on_dynamicActionTriggered(const QString& menuText) {
     QDomElement docElem = mDoc->documentElement();
     QDomElement* menuItem = NULL;
 
-    QDomNode node = docElem.firstChild();
-    while (!node.isNull()) {
-        QDomElement element = node.toElement();
-        if (!element.isNull() && element.tagName() == TAG_MENUITEM && element.hasAttribute(ATTR_NAME)) {
-            if (element.attribute(ATTR_NAME) == menuText) {
-                menuItem = &element;
-                break;
-            }
-        }
-        node = node.nextSibling();
-    }
-
-    //if the menu item element was found and is valid then we're ready to start creating stuff
-    if (menuItem != NULL) {
-        QDomNode node = menuItem->firstChild();
+    if (mYaffsModel->isImageOpen()) {
+        QDomNode node = docElem.firstChild();
         while (!node.isNull()) {
             QDomElement element = node.toElement();
-            if (!element.isNull() && element.hasAttribute(ATTR_NAME)) {
-                QString tag = element.tagName();
-                if (tag == TAG_FILE) {
-                    QString name = element.attribute(ATTR_NAME);
-                    QString dest = element.attribute(ATTR_DEST);
-                    QString permissions = element.attribute(ATTR_PERMISSIONS);
-                    QString user = element.attribute(ATTR_USER);
-                    QString group = element.attribute(ATTR_GROUP);
-
-                    //if we have all the info we need
-                    if (name.length() > 0 &&
-                            dest.length() > 0 &&
-                            permissions.length() > 0 &&
-                            user.length() > 0 &&
-                            group.length() > 0) {
-                        mYaffsModel->importFile("files/" + name, dest);
-                    }
-                } else if (tag == TAG_SYMLINK) {
-
+            if (!element.isNull() && element.tagName() == TAG_MENUITEM && element.hasAttribute(ATTR_NAME)) {
+                if (element.attribute(ATTR_NAME) == menuText) {
+                    menuItem = &element;
+                    break;
                 }
             }
             node = node.nextSibling();
         }
+
+        //if the menu item element was found and is valid then we're ready to start creating stuff
+        if (menuItem != NULL) {
+            int failCount = 0;
+
+            QDomNode node = menuItem->firstChild();
+            while (!node.isNull()) {
+                QDomElement element = node.toElement();
+                if (!element.isNull() && element.hasAttribute(ATTR_NAME)) {
+                    QString tag = element.tagName();
+                    if (tag == TAG_FILE) {
+                        QString name = element.attribute(ATTR_NAME);
+                        QString dest = element.attribute(ATTR_DEST);
+                        QString permissions = element.attribute(ATTR_PERMISSIONS);
+                        QString user = element.attribute(ATTR_USER);
+                        QString group = element.attribute(ATTR_GROUP);
+
+                        //if we have all the info we need
+                        if (name.length() > 0 &&
+                                dest.length() > 0 &&
+                                permissions.length() > 0 &&
+                                user.length() > 0 &&
+                                group.length() > 0) {
+                            YaffsItem* importedFile = mYaffsModel->importFile("files/" + name, dest);
+                            if (importedFile == NULL) {
+                                failCount++;
+                            }
+                        }
+                    } else if (tag == TAG_SYMLINK) {
+
+                    }
+                }
+                node = node.nextSibling();
+            }
+
+            if (failCount > 0) {
+                QMessageBox::critical(this, menuText, "Failed to import " + QString::number(failCount) + " items");
+            }
+        }
+    } else {
+        QMessageBox::critical(this, menuText, "An open image is required for this action");
     }
 }
 
