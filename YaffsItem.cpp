@@ -99,6 +99,17 @@ YaffsItem* YaffsItem::createDirectory(YaffsItem* parentItem, const QString& dirN
     return item;
 }
 
+YaffsItem* YaffsItem::createSymLink(YaffsItem* parentItem, const QString& filename, const QString& alias, uint uid, uint gid, uint permissions) {
+    YaffsItem* item = new YaffsItem(parentItem, filename, YAFFS_OBJECT_TYPE_SYMLINK);
+    item->setAlias(alias);
+    item->mYaffsObjectHeader.parent_obj_id = parentItem->mYaffsObjectId;
+    item->mYaffsObjectHeader.yst_mode = permissions;
+    item->mYaffsObjectHeader.yst_uid = uid;
+    item->mYaffsObjectHeader.yst_gid = gid;
+
+    return item;
+}
+
 void YaffsItem::removeChild(int row) {
     YaffsItem* item = mChildItems.at(row);
     delete item;

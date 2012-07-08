@@ -71,7 +71,8 @@ public:
 
     static YaffsItem* createRoot();
     static YaffsItem* createFile(YaffsItem* parentItem, const QString& filenameWithPath, int filesize);
-    static YaffsItem* createDirectory(YaffsItem* parentItem, const QString& filenameWithPath);
+    static YaffsItem* createDirectory(YaffsItem* parentItem, const QString& dirNameWithPath);
+    static YaffsItem* createSymLink(YaffsItem* parentItem, const QString& filename, const QString& alias, uint uid = 0, uint gid = 0, uint permissions = 0777);
 
     QVariant data(int column) const;
     int row() const;

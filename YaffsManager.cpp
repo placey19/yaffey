@@ -71,6 +71,8 @@ void YaffsManager::exportItem(const YaffsItem* item, const QString& path) {
             exportFile(item, path);
         } else if (item->isDir()) {
             exportDirectory(item, path);
+        } else if (item->isSymLink()) {
+            exportSymLink(item, path);
         }
     }
 }
@@ -124,6 +126,15 @@ void YaffsManager::exportDirectory(const YaffsItem* item, const QString& path) {
     } else {
         mYaffsExportInfo->listDirExportFailures.append(item);
     }
+}
+
+void YaffsManager::exportSymLink(const YaffsItem* item, const QString& path) {
+/*
+    if (item->isSymLink()) {
+        QFile file(path + QDir::separator() + item->getName() + ".symlink");
+        file.open(QIODevice::WriteOnly);
+        file.close();
+    }*/
 }
 
 bool YaffsManager::saveDataToFile(const QString& filename, const char* data, int length) {

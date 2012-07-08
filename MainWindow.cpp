@@ -32,12 +32,28 @@
 #include "YaffsTreeView.h"
 
 static const QString APPNAME = "Yaffey";
-static const QString VERSION = "0.2";
+static const QString VERSION = "0.3";
+
+//xml tag names and attributes
+static const char* TAG_MENUITEM = "menuitem";
+static const char* TAG_FILE = "file";
+static const char* TAG_SYMLINK = "symlink";
+static const char* ATTR_NAME = "name";
+static const char* ATTR_ALIAS = "alias";
+static const char* ATTR_DEST = "dest";
+static const char* ATTR_PERMISSIONS = "permissions";
+static const char* ATTR_USER = "user";
+static const char* ATTR_GROUP = "group";
 
 MainWindow::MainWindow(QWidget* parent, QString imageFilename) : QMainWindow(parent),
                                                                  mUi(new Ui::MainWindow),
                                                                  mContextMenu(this) {
     mUi->setupUi(this);
+
+    //create and connect the signal mapper for dynamic actions and parse dynamic menu xml
+    mSignalMapper = new QSignalMapper(this);
+    connect(mSignalMapper, SIGNAL(mapped(const QString&)), this, SLOT(on_dynamicActionTriggered(const QString&)));
+    parseDynamicMenuXml("files/android-menu.xml");
 
     //setup context menu for the treeview
     mContextMenu.addAction(mUi->actionImport);
@@ -115,6 +131,8 @@ MainWindow::MainWindow(QWidget* parent, QString imageFilename) : QMainWindow(par
 MainWindow::~MainWindow() {
     delete mUi;
     delete mFastbootDialog;
+    delete mSignalMapper;
+    delete mDoc;
 }
 
 void MainWindow::newModel() {
@@ -404,12 +422,87 @@ void MainWindow::on_treeView_customContextMenuRequested(const QPoint& pos) {
     mContextMenu.exec(p);
 }
 
+void MainWindow::on_treeView_selectionChanged() {
+    setupActions();
+}
+
 void MainWindow::on_modelChanged() {
     setupActions();
 }
 
-void MainWindow::on_treeView_selectionChanged() {
-    setupActions();
+void MainWindow::on_dynamicActionTriggered(const QString& menuText) {
+    QDomElement docElem = mDoc->documentElement();
+    QDomElement* menuItem = NULL;
+
+    QDomNode node = docElem.firstChild();
+    while (!node.isNull()) {
+        QDomElement element = node.toElement();
+        if (!element.isNull() && element.tagName() == TAG_MENUITEM && element.hasAttribute(ATTR_NAME)) {
+            if (element.attribute(ATTR_NAME) == menuText) {
+                menuItem = &element;
+                break;
+            }
+        }
+        node = node.nextSibling();
+    }
+
+    //if the menu item element was found and is valid then we're ready to start creating stuff
+    if (menuItem != NULL) {
+        QDomNode node = menuItem->firstChild();
+        while (!node.isNull()) {
+            QDomElement element = node.toElement();
+            if (!element.isNull() && element.hasAttribute(ATTR_NAME)) {
+                QString tag = element.tagName();
+                if (tag == TAG_FILE) {
+                    QString name = element.attribute(ATTR_NAME);
+                    QString dest = element.attribute(ATTR_DEST);
+                    QString permissions = element.attribute(ATTR_PERMISSIONS);
+                    QString user = element.attribute(ATTR_USER);
+                    QString group = element.attribute(ATTR_GROUP);
+
+                    //if we have all the info we need
+                    if (name.length() > 0 &&
+                            dest.length() > 0 &&
+                            permissions.length() > 0 &&
+                            user.length() > 0 &&
+                            group.length() > 0) {
+                        mYaffsModel->importFile("files/" + name, dest);
+                    }
+                } else if (tag == TAG_SYMLINK) {
+
+                }
+            }
+            node = node.nextSibling();
+        }
+    }
+}
+
+void MainWindow::parseDynamicMenuXml(const QString& xmlFilename) {
+    QFile file(xmlFilename);
+    if (file.open(QIODevice::ReadOnly)) {
+        mDoc = new QDomDocument(xmlFilename);
+        if (mDoc->setContent(&file)) {
+            QDomElement docElem = mDoc->documentElement();
+            if (docElem.hasAttribute(ATTR_NAME)) {
+                QMenu* menu = mUi->menuAndroid->addMenu(docElem.attribute(ATTR_NAME));
+
+                QDomNode node = docElem.firstChild();
+                while (!node.isNull()) {
+                    QDomElement element = node.toElement();
+                    if (!element.isNull() && element.tagName() == TAG_MENUITEM && element.hasAttribute(ATTR_NAME)) {
+                        //create new action, add it to the new menu and map the triggered signal
+                        QAction* action = new QAction(element.attribute(ATTR_NAME), NULL);
+                        menu->addAction(action);
+                        connect(action, SIGNAL(triggered()), mSignalMapper, SLOT(map()));
+                        mSignalMapper->setMapping(action, action->text());
+                    }
+                    node = node.nextSibling();
+                }
+            }
+        }
+
+        file.close();
+    }
 }
 
 void MainWindow::exportSelectedItems(const QString& path) {

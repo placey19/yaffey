@@ -22,6 +22,8 @@
 #include <QMainWindow>
 #include <QStandardItemModel>
 #include <QMenu>
+#include <QSignalMapper>
+#include <QDomDocument>
 
 #include "YaffsModel.h"
 #include "YaffsManager.h"
@@ -70,8 +72,10 @@ private slots:
     void on_treeView_customContextMenuRequested(const QPoint& pos);
     void on_treeView_selectionChanged();
     void on_modelChanged();
+    void on_dynamicActionTriggered(const QString& menuText);
 
 private:
+    void parseDynamicMenuXml(const QString& xmlFilename);
     void newModel();
     void openImage(const QString& imageFilename);
     void closeImage();
@@ -87,6 +91,8 @@ private:
     QMenu mContextMenu;
     QMenu mHeaderContextMenu;
     QDialog* mFastbootDialog;           //owned
+    QSignalMapper* mSignalMapper;       //owned
+    QDomDocument* mDoc;
 };
 
 #endif  //MAINWINDOW_H

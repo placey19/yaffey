@@ -54,6 +54,7 @@ private:
     void exportItem(const YaffsItem* item, const QString& path);
     void exportFile(const YaffsItem* item, const QString& path);
     void exportDirectory(const YaffsItem* item, const QString& path);
+    void exportSymLink(const YaffsItem* item, const QString& path);
     bool saveDataToFile(const QString& filename, const char* data, int length);
 
 private:

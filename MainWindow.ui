@@ -103,8 +103,15 @@
     <addaction name="separator"/>
     <addaction name="actionEditProperties"/>
    </widget>
+   <widget class="QMenu" name="menuAndroid">
+    <property name="title">
+     <string>&amp;Android</string>
+    </property>
+    <addaction name="actionAndroidFastboot"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuAndroid"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">

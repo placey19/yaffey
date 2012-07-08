@@ -65,6 +65,42 @@ YaffsReadInfo YaffsModel::openImage(const QString& imageFilename) {
     return readInfo;
 }
 
+//get the YaffsItem at the given internal path or create the path and return a new item.
+//will return null if root doesn't exist
+YaffsItem* YaffsModel::pathToItem(const QString& path) {
+    YaffsItem* parent = mYaffsRoot;
+    if (parent != NULL) {
+        QStringList parentDirNames = path.split('/');
+        for (int i = 0; i < parentDirNames.length() - 1; ++i) {
+            QString dirName = parentDirNames[i];
+            qDebug() << dirName;
+/*
+            YaffsItem* child = parent->findDirWithName(dirName);
+            if (child != NULL) {
+                //found directory
+                parent = child;
+            } else {
+                //need to create directory
+            }*/
+        }
+    }
+}
+
+void YaffsModel::importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath) {
+    qDebug() << "externalFilenameWithPath: " << externalFilenameWithPath << ", internalFilenameWithPath: " << internalFilenameWithPath;
+
+    QString path = "/";
+    int slash = internalFilenameWithPath.lastIndexOf('/');
+    if (slash >= 0) {
+        path = internalFilenameWithPath.left(slash);
+    }
+
+    YaffsItem* parentItem = pathToItem(path);
+    if (parentItem != NULL) {
+        importFile(parentItem, externalFilenameWithPath);
+    }
+}
+
 void YaffsModel::importFile(YaffsItem* parentItem, const QString& filenameWithPath) {
     if (parentItem && filenameWithPath.length() > 0) {
         QFileInfo fileInfo(filenameWithPath);
