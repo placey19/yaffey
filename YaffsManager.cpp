@@ -81,12 +81,13 @@ void YaffsManager::exportFile(const YaffsItem* item, const QString& path) {
     bool result = false;
     if (item->isFile() && item->getCondition() != YaffsItem::NEW) {
         int headerPosition = item->getHeaderPosition();
-        int filesize = item->getFileSize();
+        size_t filesize = item->getFileSize();
         QString imageFilename = mYaffsModel->getImageFilename();
         YaffsControl yaffsControl(imageFilename.toStdString().c_str(), NULL);
         if (yaffsControl.open(YaffsControl::OPEN_READ)) {
-            char* data = yaffsControl.extractFile(headerPosition);
-            if (data != NULL) {
+            size_t bytesExtracted = 0;
+            char* data = yaffsControl.extractFile(headerPosition, bytesExtracted);
+            if (bytesExtracted == filesize) {
                 QDir().mkpath(path);
                 result = saveDataToFile(path + QDir::separator() + item->getName(), data, filesize);
                 delete data;
@@ -137,12 +138,16 @@ void YaffsManager::exportSymLink(const YaffsItem* item, const QString& path) {
     }*/
 }
 
-bool YaffsManager::saveDataToFile(const QString& filename, const char* data, int length) {
+bool YaffsManager::saveDataToFile(const QString& filename, const char* data, size_t length) {
     bool result = false;
     QFile file(filename);
     bool open = file.open(QIODevice::WriteOnly);
     if (open) {
-        result = (file.write(data, length) != -1);
+        if (length > 0) {
+            result = (file.write(data, length) == length);
+        } else if (data == NULL) {
+            result = true;
+        }
         file.close();
     }
     return result;

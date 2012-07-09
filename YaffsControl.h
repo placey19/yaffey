@@ -64,7 +64,7 @@ public:
     bool readImage();
     YaffsReadInfo getReadInfo() { return mReadInfo; }
     YaffsSaveInfo getSaveInfo() { return mSaveInfo; }
-    char* extractFile(int objectHeaderPos);
+    char* extractFile(int objectHeaderPos, size_t& bytesExtracted);
     bool updateHeader(int objectHeaderPos, const yaffs_obj_hdr& objectHeader, int objectId);
 
     int addRoot(const yaffs_obj_hdr& objectHeader, int& headerPos);

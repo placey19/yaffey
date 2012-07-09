@@ -263,28 +263,32 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
         if (fileItem->isFile()) {
             YaffsItem::Condition condition = fileItem->getCondition();
             bool saved = false;
-            int filesize = fileItem->getFileSize();
+            size_t filesize = fileItem->getFileSize();
             int newObjectId = -1;
             int newHeaderPos = -1;
 
+            //if item is new then get the data from the local file system
             if (condition == YaffsItem::NEW) {
                 char* data = new char[filesize];
                 QString filename = fileItem->getExternalFilename();
                 FILE* file = fopen(filename.toStdString().c_str(), "rb");
                 if (file) {
-                    int bytesRead = fread(data, 1, filesize, file);
+                    size_t bytesRead = fread(data, 1, filesize, file);
                     if (bytesRead == filesize) {
                         newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
                         saved = true;
                     }
+                    fclose(file);
                 }
                 delete data;
+            //the data is in the opened image so get the it from there
             } else {
                 int headerPosition = fileItem->getHeaderPosition();
                 YaffsControl yaffsControl(mImageFilename.toStdString().c_str(), NULL);
                 if (yaffsControl.open(YaffsControl::OPEN_READ)) {
-                    char* data = yaffsControl.extractFile(headerPosition);
-                    if (data != NULL) {
+                    size_t bytesExtracted = 0;
+                    char* data = yaffsControl.extractFile(headerPosition, bytesExtracted);
+                    if (bytesExtracted == filesize) {
                         newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
                         saved = true;
                     }

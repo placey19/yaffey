@@ -199,7 +199,7 @@ bool YaffsControl::writePage(u32 objectId, u32 chunkId, u32 numBytes) {
     return result;
 }
 
-char* YaffsControl::extractFile(int objectHeaderPos) {
+char* YaffsControl::extractFile(int objectHeaderPos, size_t& bytesExtracted) {
     char* data = NULL;
     char* dataPtr;
     if (mImageFile) {
@@ -213,6 +213,7 @@ char* YaffsControl::extractFile(int objectHeaderPos) {
                         dataPtr = data;
                         size_t bytesRemaining = static_cast<size_t>(objectHeader->file_size_low);
                         size_t size = 0;
+                        bytesExtracted = 0;
 
                         bool success = true;
                         int readResult;
@@ -226,6 +227,7 @@ char* YaffsControl::extractFile(int objectHeaderPos) {
                                     break;
                                 }
                                 dataPtr += size;
+                                bytesExtracted += size;
                             } else if (readResult == -1) {
                                 success = false;
                                 break;
