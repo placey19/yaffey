@@ -28,12 +28,6 @@
 #include "YaffsModel.h"
 #include "YaffsManager.h"
 
-#define SELECTED_ROOT               0x1
-#define SELECTED_DIR                0x2
-#define SELECTED_FILE               0x4
-#define SELECTED_SYMLINK            0x8
-#define SELECTED_SINGLE             0x10
-
 namespace Ui {
     class MainWindow;
 }
@@ -82,7 +76,6 @@ private:
     void exportSelectedItems(const QString& path);
     void setupActions();
     void updateWindowTitle();
-    int identifySelection(const QModelIndexList& selectedRows);
 
 private:
     Ui::MainWindow* mUi;                //owned

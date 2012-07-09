@@ -22,14 +22,18 @@
 #include "ui_DialogEditProperties.h"
 #include "YaffsItem.h"
 #include "AndroidIDs.h"
+#include "Utils.h"
 
-DialogEditProperties::DialogEditProperties(YaffsModel& yaffsModel, QModelIndexList& selectedRows, QWidget* parent) : QDialog(parent),
-                                                                                                                     mUi(new Ui::DialogEditProperties),
-                                                                                                                     mYaffsModel(yaffsModel),
-                                                                                                                     mSelectedRows(selectedRows) {
+DialogEditProperties::DialogEditProperties(YaffsModel& yaffsModel,
+                                           QModelIndexList& selectedRows,
+                                           QWidget* parent) : QDialog(parent),
+                                                              mUi(new Ui::DialogEditProperties),
+                                                              mYaffsModel(yaffsModel),
+                                                              mSelectedRows(selectedRows) {
     mUi->setupUi(this);
 
-    if (mSelectedRows.size() == 1) {
+    int selectionFlags = Utils::identifySelectedRows(selectedRows);
+    if (selectionFlags & SELECTED_SINGLE) {
         mNameIndex = mSelectedRows.at(0);
         QModelIndex parent = mNameIndex.parent();
         YaffsItem* item = static_cast<YaffsItem*>(mNameIndex.internalPointer());
@@ -52,6 +56,11 @@ DialogEditProperties::DialogEditProperties(YaffsModel& yaffsModel, QModelIndexLi
             mUi->lineAlias->setText(alias);
         } else {
             mUi->lineAlias->setEnabled(false);
+        }
+
+        //if this selected item is the root then disable editing the name
+        if (selectionFlags & SELECTED_ROOT) {
+            mUi->lineName->setEnabled(false);
         }
 
         //permissions
@@ -87,6 +96,7 @@ DialogEditProperties::DialogEditProperties(YaffsModel& yaffsModel, QModelIndexLi
         updateUserComboBox(uidText);
         updateGroupComboBox(gidText);
     } else {
+        //currently don't support editing multiple items at the same time
         mUi->lineName->setEnabled(false);
         mUi->lineAlias->setEnabled(false);
         mUi->boxPermissionUser->setEnabled(false);

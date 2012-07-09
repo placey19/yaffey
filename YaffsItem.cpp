@@ -67,6 +67,7 @@ YaffsItem* YaffsItem::createRoot() {
     item->mYaffsObjectHeader.yst_mode = 0771 | 0x4000;
     item->mYaffsObjectHeader.yst_uid = 0;
     item->mYaffsObjectHeader.yst_gid = 0;
+    item->setName("/");
 
     return item;
 }
@@ -191,9 +192,11 @@ QString YaffsItem::getFullPath() const {
     } else {
         const YaffsItem* item = this;
         do {
-            QString name = item->getName();
-            if (name.length() > 0) {
-                fullPath.prepend("/" + name);
+            if (!item->isRoot()) {
+                QString name = item->getName();
+                if (name.length() > 0) {
+                    fullPath.prepend("/" + name);
+                }
             }
         } while ((item = item->parent()));
     }

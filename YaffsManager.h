@@ -55,7 +55,6 @@ private:
     void exportFile(const YaffsItem* item, const QString& path);
     void exportDirectory(const YaffsItem* item, const QString& path);
     void exportSymLink(const YaffsItem* item, const QString& path);
-    bool saveDataToFile(const QString& filename, const char* data, size_t length);
 
 private:
     static YaffsManager* mSelf;

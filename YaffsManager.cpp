@@ -20,6 +20,7 @@
 
 #include "YaffsManager.h"
 #include "YaffsControl.h"
+#include "Utils.h"
 
 YaffsManager* YaffsManager::mSelf = new YaffsManager();
 
@@ -89,7 +90,7 @@ void YaffsManager::exportFile(const YaffsItem* item, const QString& path) {
             char* data = yaffsControl.extractFile(headerPosition, bytesExtracted);
             if (bytesExtracted == filesize) {
                 QDir().mkpath(path);
-                result = saveDataToFile(path + QDir::separator() + item->getName(), data, filesize);
+                result = Utils::saveDataToFile(path + QDir::separator() + item->getName(), data, filesize);
                 delete data;
             }
         }
@@ -136,19 +137,4 @@ void YaffsManager::exportSymLink(const YaffsItem* item, const QString& path) {
         file.open(QIODevice::WriteOnly);
         file.close();
     }*/
-}
-
-bool YaffsManager::saveDataToFile(const QString& filename, const char* data, size_t length) {
-    bool result = false;
-    QFile file(filename);
-    bool open = file.open(QIODevice::WriteOnly);
-    if (open) {
-        if (length > 0) {
-            result = (file.write(data, length) == length);
-        } else if (data == NULL) {
-            result = true;
-        }
-        file.close();
-    }
-    return result;
 }

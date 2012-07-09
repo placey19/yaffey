@@ -30,6 +30,7 @@
 #include "DialogImport.h"
 #include "YaffsManager.h"
 #include "YaffsTreeView.h"
+#include "Utils.h"
 
 static const QString APPNAME = "Yaffey";
 static const QString VERSION = "0.3";
@@ -593,29 +594,11 @@ void MainWindow::exportSelectedItems(const QString& path) {
     }
 }
 
-int MainWindow::identifySelection(const QModelIndexList& selectedRows) {
-    int selectionFlags = (selectedRows.size() == 1 ? SELECTED_SINGLE : 0);
-
-    //iterate through the list of items to see what we have selected
-    YaffsItem* item = NULL;
-    foreach (QModelIndex index, selectedRows) {
-        item = static_cast<YaffsItem*>(index.internalPointer());
-        if (item) {
-            selectionFlags |= (item->isRoot() ? SELECTED_ROOT : 0);
-            selectionFlags |= (item->isDir() ? SELECTED_DIR : 0);
-            selectionFlags |= (item->isFile() ? SELECTED_FILE : 0);
-            selectionFlags |= (item->isSymLink() ? SELECTED_SYMLINK : 0);
-        }
-    }
-
-    return selectionFlags;
-}
-
 void MainWindow::setupActions() {
     updateWindowTitle();
 
     QModelIndexList selectedRows = mUi->treeView->selectionModel()->selectedRows();
-    int selectionFlags = identifySelection(selectedRows);
+    int selectionFlags = Utils::identifySelectedRows(selectedRows);
     int selectionSize = selectedRows.size();
 
     if (mYaffsModel->index(0, 0).isValid()) {
@@ -648,7 +631,7 @@ void MainWindow::setupActions() {
 
     if (selectionSize >= 1) {
         mUi->actionDelete->setEnabled(!(selectionFlags & SELECTED_ROOT));
-        mUi->actionEditProperties->setEnabled(!(selectionFlags & SELECTED_ROOT));
+        mUi->actionEditProperties->setEnabled(true);
         mUi->actionExport->setEnabled((selectionFlags & (SELECTED_DIR | SELECTED_FILE) && !(selectionFlags & SELECTED_SYMLINK)));
 
         mUi->statusBar->showMessage("Selected " + QString::number(selectedRows.size()) + " items");

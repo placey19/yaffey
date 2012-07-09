@@ -323,11 +323,7 @@ QVariant YaffsModel::data(const QModelIndex& itemIndex, int role) const {
     YaffsItem* item = static_cast<YaffsItem*>(itemIndex.internalPointer());
     if (itemIndex.isValid() && item) {
         if (role == Qt::DisplayRole) {
-            if (item == mYaffsRoot && itemIndex.column() == YaffsItem::NAME) {
-                result = "/";
-            } else {
-                result = item->data(itemIndex.column());
-            }
+            result = item->data(itemIndex.column());
         } else if (role == Qt::ForegroundRole) {
             if (itemIndex.column() == YaffsItem::NAME) {
                 if (item->isDir()) {
@@ -339,20 +335,20 @@ QVariant YaffsModel::data(const QModelIndex& itemIndex, int role) const {
                 }
             }
         } else if (role == Qt::BackgroundRole) {
-//            static const QColor orange(255, 165, 0);
+/*            static const QColor orange(255, 165, 0);
 
             switch (item->getCondition()) {
             case YaffsItem::CLEAN:
                 break;
             case YaffsItem::DIRTY:
-//                result = orange;
+                result = orange;
                 break;
             case YaffsItem::NEW:
-//                result = Qt::green;
+                result = Qt::green;
                 break;
             case YaffsItem::MOVED:
                 break;
-            }
+            }*/
         } else if (role == Qt::FontRole) {
             if (itemIndex.column() == YaffsItem::PERMISSIONS) {
                 result = QFont("Courier");
@@ -422,7 +418,8 @@ Qt::ItemFlags YaffsModel::flags(const QModelIndex& itemIndex) const {
     Qt::ItemFlags flags = 0;
     if (itemIndex.isValid()) {
         flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-        if (itemIndex.column() == YaffsItem::NAME) {
+        YaffsItem* item = static_cast<YaffsItem*>(itemIndex.internalPointer());
+        if (!item->isRoot() && itemIndex.column() == YaffsItem::NAME) {
             flags |= Qt::ItemIsEditable;
         }
     }
@@ -469,7 +466,6 @@ QModelIndex YaffsModel::index(int row, int column, const QModelIndex& parentInde
     YaffsItem* parent = NULL;
 
     if (mYaffsRoot && (!parentIndex.isValid() || parentIndex == QModelIndex())) {
-//        parent = mYaffsRoot;
         if (row == 0) {
             return createIndex(row, column, mYaffsRoot);
         }
@@ -611,6 +607,7 @@ int YaffsModel::deleteRows(int row, int count, const QModelIndex& parentIndex) {
 void YaffsModel::newItem(int yaffsObjectId, const yaffs_obj_hdr* yaffsObjectHeader, int fileOffset) {
     if (yaffsObjectId == YAFFS_OBJECTID_ROOT) {
         mYaffsRoot = new YaffsItem(NULL, yaffsObjectHeader, fileOffset, yaffsObjectId);
+        mYaffsRoot->setName("/");
         mYaffsObjectsItemMap.insert(YAFFS_OBJECTID_ROOT, mYaffsRoot);
         return;
     }

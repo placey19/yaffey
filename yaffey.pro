@@ -22,7 +22,8 @@ SOURCES   += main.cpp\
     yaffs2/yaffs_ecc.c \
     DialogFastboot.cpp \
     DialogImport.cpp \
-    YaffsManager.cpp
+    YaffsManager.cpp \
+    Utils.cpp
 
 HEADERS   += \
     MainWindow.h \
@@ -40,7 +41,8 @@ HEADERS   += \
     Yaffs2.h \
     DialogFastboot.h \
     DialogImport.h \
-    YaffsManager.h
+    YaffsManager.h \
+    Utils.h
 
 FORMS     += \
     MainWindow.ui \
