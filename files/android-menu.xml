@@ -2,7 +2,7 @@
 <menuitem name="Root">
     <menuitem name="Add su">
         <file name="su-3.0.3" dest="/bin/su" permissions="6755" user="0" group="0" />
-        <symlink name="/bin/su" dest="/xbin/su" permissions="777" user="0" group="0" />
+        <symlink alias="/bin/su" dest="/xbin/su" permissions="777" user="0" group="0" />
     </menuitem>
     <menuitem name="Add Superuser.apk">
         <file name="Superuser-3.0.7.apk" dest="/app/Superuser.apk" permissions="777" user="0" group="0" />

@@ -36,10 +36,10 @@ public:
 
     void newImage(const QString& newImageName);
     YaffsReadInfo openImage(const QString& imageFilename);
-    YaffsItem* importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath);
+    YaffsItem* importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath, uint uid, uint gid, uint permissions);
     YaffsItem* importFile(YaffsItem* parentItem, const QString& filenameWithPath);
     void importDirectory(YaffsItem* parentItem, const QString& dirNameWithPath);
-    bool save();
+    YaffsItem* createSymLink(const QString& internalFilenameWithPath, const QString& alias, uint uid, uint gid, uint permissions);
     YaffsSaveInfo saveAs(const QString& filename);
     QString getImageFilename() const { return mImageFilename; }
     bool isDirty() const { return (mItemsDirty + mItemsDeleted + mItemsNew); }

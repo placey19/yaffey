@@ -450,32 +450,48 @@ void MainWindow::on_dynamicActionTriggered(const QString& menuText) {
         //if the menu item element was found and is valid then we're ready to start creating stuff
         if (menuItem != NULL) {
             int failCount = 0;
+            int xmlErrorCount = 0;
 
             QDomNode node = menuItem->firstChild();
             while (!node.isNull()) {
                 QDomElement element = node.toElement();
-                if (!element.isNull() && element.hasAttribute(ATTR_NAME)) {
+                if (!element.isNull()) {
                     QString tag = element.tagName();
-                    if (tag == TAG_FILE) {
-                        QString name = element.attribute(ATTR_NAME);
-                        QString dest = element.attribute(ATTR_DEST);
-                        QString permissions = element.attribute(ATTR_PERMISSIONS);
-                        QString user = element.attribute(ATTR_USER);
-                        QString group = element.attribute(ATTR_GROUP);
+                    QString dest = element.attribute(ATTR_DEST);
+                    QString permissions = element.attribute(ATTR_PERMISSIONS);
+                    QString user = element.attribute(ATTR_USER);
+                    QString group = element.attribute(ATTR_GROUP);
 
-                        //if we have all the info we need
-                        if (name.length() > 0 &&
-                                dest.length() > 0 &&
-                                permissions.length() > 0 &&
-                                user.length() > 0 &&
-                                group.length() > 0) {
-                            YaffsItem* importedFile = mYaffsModel->importFile("files/" + name, dest);
-                            if (importedFile == NULL) {
-                                failCount++;
+                    if (dest.length() > 0 && permissions.length() > 0 && user.length() > 0 && group.length() > 0) {
+                        uint uid = user.toUInt();
+                        uint gid = group.toUInt();
+                        uint perms = permissions.toUInt(0, 8);
+
+                        if (tag == TAG_FILE) {
+                            QString name = element.attribute(ATTR_NAME);
+
+                            if (name.length() > 0) {
+                                YaffsItem* importedFile = mYaffsModel->importFile("files/" + name, dest, uid, gid, perms);
+                                if (importedFile == NULL) {
+                                    failCount++;
+                                }
+                            } else {
+                                xmlErrorCount++;
+                            }
+                        } else if (tag == TAG_SYMLINK) {
+                            QString alias = element.attribute(ATTR_ALIAS);
+
+                            if (alias.length() > 0) {
+                                YaffsItem* newSymLink = mYaffsModel->createSymLink(dest, alias, uid, gid, perms);
+                                if (newSymLink == NULL) {
+                                    failCount++;
+                                }
+                            } else {
+                                xmlErrorCount++;
                             }
                         }
-                    } else if (tag == TAG_SYMLINK) {
-
+                    } else {
+                        xmlErrorCount++;
                     }
                 }
                 node = node.nextSibling();
@@ -483,6 +499,10 @@ void MainWindow::on_dynamicActionTriggered(const QString& menuText) {
 
             if (failCount > 0) {
                 QMessageBox::critical(this, menuText, "Failed to import " + QString::number(failCount) + " items");
+            }
+
+            if (xmlErrorCount > 0) {
+                QMessageBox::critical(this, menuText, QString::number(xmlErrorCount) + " error(s) found in xml");
             }
         }
     } else {
