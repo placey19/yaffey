@@ -26,6 +26,15 @@
 #include "YaffsControl.h"
 #include "YaffsItem.h"
 
+struct YaffsSaveInfo {
+    int numFilesSaved;
+    int numFilesFailed;
+    int numDirsSaved;
+    int numDirsFailed;
+    int numSymLinksSaved;
+    int numSymLinksFailed;
+};
+
 class YaffsModel : public QAbstractItemModel,
                    public YaffsControlObserver {
     Q_OBJECT
@@ -40,7 +49,7 @@ public:
     YaffsItem* importFile(YaffsItem* parentItem, const QString& filenameWithPath);
     void importDirectory(YaffsItem* parentItem, const QString& dirNameWithPath);
     YaffsItem* createSymLink(const QString& internalFilenameWithPath, const QString& alias, uint uid, uint gid, uint permissions);
-    YaffsSaveInfo saveAs(const QString& filename);
+    bool saveAs(const QString& filename, YaffsSaveInfo& saveInfo);
     QString getImageFilename() const { return mImageFilename; }
     bool isDirty() const { return (mItemsDirty + mItemsDeleted + mItemsNew); }
     bool isImageOpen() const { return (mYaffsRoot != NULL); }
@@ -79,6 +88,8 @@ private:
     int mItemsNew;
     int mItemsDirty;
     int mItemsDeleted;
+
+    YaffsSaveInfo* mSaveInfo;
 };
 
 #endif  //YAFFSMODEL_H

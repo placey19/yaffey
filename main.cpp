@@ -17,6 +17,7 @@
  */
 
 #include <QtGui/QApplication>
+#include <QTime>
 
 #include "MainWindow.h"
 
@@ -25,6 +26,9 @@ int main(int argc, char* argv[]) {
     if (argc > 0) {
         arg = argv[1];
     }
+
+    int seed = QTime::currentTime().msec();
+    qsrand((uint)seed);
 
     QApplication a(argc, argv);
     MainWindow w(NULL, arg);

@@ -17,6 +17,7 @@
  */
 
 #include <QFile>
+#include <QTime>
 
 #include "Utils.h"
 #include "YaffsItem.h"
@@ -52,4 +53,17 @@ bool Utils::saveDataToFile(const QString& filename, const char* data, size_t len
         file.close();
     }
     return result;
+}
+
+QString Utils::randomString(int length) {
+    static const QString charset = "abcdefghijklmnopqrstuvwxyz";
+    QString str;
+
+    int charsetLength = charset.length();
+    for (int i = 0; i < length; i++) {
+        QCharRef chr = charset[qrand() % charsetLength];
+        str.append(chr);
+    }
+
+    return str;
 }

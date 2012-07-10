@@ -228,10 +228,11 @@ void MainWindow::on_actionSaveAs_triggered() {
         QString imgName = mYaffsModel->getImageFilename();
         QString saveAsFilename = QFileDialog::getSaveFileName(this, "Save Image As", "./" + imgName);
         if (saveAsFilename.length() > 0) {
-            YaffsSaveInfo saveInfo = mYaffsModel->saveAs(saveAsFilename);
-            updateWindowTitle();
-            if (saveInfo.result) {
-                mUi->statusBar->showMessage("Image saved: " + saveAsFilename);
+            if (saveAsFilename.compare(mYaffsModel->getImageFilename()) != 0) {
+                YaffsSaveInfo saveInfo;
+                bool result = mYaffsModel->saveAs(saveAsFilename, saveInfo);
+                updateWindowTitle();
+
                 QString summary("<table>" \
                                 "<tr><td width=120>Files:</td><td>" + QString::number(saveInfo.numFilesSaved) + "</td></tr>" +
                                 "<tr><td width=120>Directories:</td><td>" + QString::number(saveInfo.numDirsSaved) + "</td></tr>" +
@@ -240,11 +241,17 @@ void MainWindow::on_actionSaveAs_triggered() {
                                 "<tr><td width=120>Files Failed:</td><td>" + QString::number(saveInfo.numFilesFailed) + "</td></tr>" +
                                 "<tr><td width=120>Directories Failed:</td><td>" + QString::number(saveInfo.numDirsFailed) + "</td></tr>" +
                                 "<tr><td width=120>SymLinks Failed:</td><td>" + QString::number(saveInfo.numSymLinksFailed) + "</td></tr></td></tr></table>");
-                QMessageBox::information(this, "Save summary", summary);
+
+                if (result) {
+                    mUi->statusBar->showMessage("Image saved: " + saveAsFilename);
+                    QMessageBox::information(this, "Image saved", summary);
+                } else {
+                    mUi->statusBar->showMessage("Error saving image: " + saveAsFilename);
+                    QMessageBox::critical(this, "Error saving image", summary);
+                }
             } else {
-                QString msg = "Error saving image: " + saveAsFilename;
-                QMessageBox::critical(this, "Error", msg);
-                mUi->statusBar->showMessage(msg);
+                mUi->statusBar->showMessage("Error saving image: " + saveAsFilename);
+                QMessageBox::critical(this, "Error saving image", "Can't save over current image, choose another filename.");
             }
         }
     }

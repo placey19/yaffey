@@ -48,7 +48,8 @@ public:
         CLEAN,
         DIRTY,
         NEW,
-        MOVED
+        MOVED,
+        ERROR
     };
 
     enum Column {

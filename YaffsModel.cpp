@@ -19,10 +19,12 @@
 #include <QtGui>
 
 #include "YaffsModel.h"
+#include "Utils.h"
 
 YaffsModel::YaffsModel(QObject* parent) : QAbstractItemModel(parent) {
     mYaffsRoot = NULL;
     mYaffsSaveControl = NULL;
+    mSaveInfo = NULL;
 
     mItemsNew = 0;
     mItemsDirty = 0;
@@ -193,29 +195,50 @@ YaffsItem* YaffsModel::createSymLink(const QString& internalFilenameWithPath, co
     return newSymLink;
 }
 
-YaffsSaveInfo YaffsModel::saveAs(const QString& filename) {
-    YaffsSaveInfo saveInfo;
+bool YaffsModel::saveAs(const QString& filename, YaffsSaveInfo& saveInfo) {
     memset(&saveInfo, 0, sizeof(YaffsSaveInfo));
+    bool result = false;
 
-    if (filename != mImageFilename) {
-        mYaffsSaveControl = new YaffsControl(filename.toStdString().c_str(), NULL);
-        if (mYaffsSaveControl->open(YaffsControl::OPEN_NEW)) {
-            saveDirectory(mYaffsRoot);
-            saveInfo = mYaffsSaveControl->getSaveInfo();
-            saveInfo.result = (saveInfo.numDirsFailed + saveInfo.numFilesFailed + saveInfo.numSymLinksFailed == 0);
-        }
-        delete mYaffsSaveControl;
-        mYaffsSaveControl = NULL;
+    if (filename.compare(mImageFilename) != 0) {
+        mSaveInfo = &saveInfo;
+        QString tmpFilename = filename + "." + Utils::randomString(4) + ".tmp";
 
-        if (saveInfo.result) {
-            mItemsNew = 0;
-            mItemsDirty = 0;
-            mItemsDeleted = 0;
-            mImageFilename = filename;
+        //make sure tmp file doesn't already exist
+        QFileInfo tmpFileInfo(tmpFilename);
+        if (!tmpFileInfo.exists()) {
+            mYaffsSaveControl = new YaffsControl(tmpFilename.toStdString().c_str(), NULL);
+            if (mYaffsSaveControl->open(YaffsControl::OPEN_NEW)) {
+                saveDirectory(mYaffsRoot);
+                result = (mSaveInfo->numDirsFailed + mSaveInfo->numFilesFailed + mSaveInfo->numSymLinksFailed == 0);
+            }
+            delete mYaffsSaveControl;
+            mYaffsSaveControl = NULL;
+            mSaveInfo = NULL;
+
+            if (result) {
+                //make sure no file with the goal filename exists
+                QFileInfo fileInfo(filename);
+                if (fileInfo.exists()) {
+                    result = QFile::remove(filename);
+                }
+
+                if (result) {
+                    //rename the tmp file to the goal filename
+                    result = QFile::rename(tmpFilename, filename);
+
+                    mItemsNew = 0;
+                    mItemsDirty = 0;
+                    mItemsDeleted = 0;
+                    mImageFilename = filename;
+                }
+            }
+
+            //delete the tmp file (if it exists)
+            QFile::remove(tmpFilename);
         }
     }
 
-    return saveInfo;
+    return result;
 }
 
 void YaffsModel::saveDirectory(YaffsItem* dirItem) {
@@ -229,29 +252,41 @@ void YaffsModel::saveDirectory(YaffsItem* dirItem) {
 
         int newObjectId = -1;
         int newHeaderPos = -1;
-        if (parentItem) {
-            newObjectId = mYaffsSaveControl->addDirectory(dirItem->getHeader(), newHeaderPos);
-        } else {
+        bool isRoot = (parentItem == NULL);
+        if (isRoot) {
             newObjectId = mYaffsSaveControl->addRoot(dirItem->getHeader(), newHeaderPos);
+        } else {
+            newObjectId = mYaffsSaveControl->addDirectory(dirItem->getHeader(), newHeaderPos);
         }
-        dirItem->setHeaderPosition(newHeaderPos);
-        dirItem->setObjectId(newObjectId);
 
-        int childCount = dirItem->childCount();
-        for (int i = 0; i < childCount; ++i) {
-            YaffsItem* childItem = dirItem->child(i);
-            childItem->setParentObjectId(newObjectId);
+        if (newObjectId != -1) {
+            dirItem->setHeaderPosition(newHeaderPos);
+            dirItem->setObjectId(newObjectId);
 
-            if (childItem->isDir()) {
-                saveDirectory(childItem);
-            } else if (childItem->isFile()) {
-                saveFile(childItem);
-            } else if (childItem->isSymLink()) {
-                saveSymLink(childItem);
+            int childCount = dirItem->childCount();
+            for (int i = 0; i < childCount; ++i) {
+                YaffsItem* childItem = dirItem->child(i);
+                childItem->setParentObjectId(newObjectId);
+
+                if (childItem->isDir()) {
+                    saveDirectory(childItem);
+                } else if (childItem->isFile()) {
+                    saveFile(childItem);
+                } else if (childItem->isSymLink()) {
+                    saveSymLink(childItem);
+                }
             }
-        }
 
-        dirItem->setCondition(YaffsItem::CLEAN);
+            if (!isRoot) {
+                mSaveInfo->numDirsSaved++;
+            }
+            dirItem->setCondition(YaffsItem::CLEAN);
+        } else {
+            if (!isRoot) {
+                mSaveInfo->numDirsFailed++;
+            }
+            dirItem->setCondition(YaffsItem::ERROR);
+        }
     }
 }
 
@@ -262,7 +297,6 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
 
         if (fileItem->isFile()) {
             YaffsItem::Condition condition = fileItem->getCondition();
-            bool saved = false;
             size_t filesize = fileItem->getFileSize();
             int newObjectId = -1;
             int newHeaderPos = -1;
@@ -276,7 +310,6 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                     size_t bytesRead = fread(data, 1, filesize, file);
                     if (bytesRead == filesize) {
                         newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
-                        saved = true;
                     }
                     fclose(file);
                 }
@@ -290,15 +323,19 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                     char* data = yaffsControl.extractFile(headerPosition, bytesExtracted);
                     if (bytesExtracted == filesize) {
                         newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
-                        saved = true;
                     }
                 }
             }
 
-            if (saved) {
+            if (newObjectId != -1) {
                 fileItem->setHeaderPosition(newHeaderPos);
                 fileItem->setObjectId(newObjectId);
+
+                mSaveInfo->numFilesSaved++;
                 fileItem->setCondition(YaffsItem::CLEAN);
+            } else {
+                mSaveInfo->numFilesFailed++;
+                fileItem->setCondition(YaffsItem::ERROR);
             }
         }
     }
@@ -311,9 +348,17 @@ void YaffsModel::saveSymLink(YaffsItem* symLinkItem) {
             qDebug() << "s: " << symLinkItem->getFullPath() << ", Parent: " << parentItem->getFullPath();
             int newHeaderPos = -1;
             int newObjectId = mYaffsSaveControl->addSymLink(symLinkItem->getHeader(), newHeaderPos);
-            symLinkItem->setHeaderPosition(newHeaderPos);
-            symLinkItem->setObjectId(newObjectId);
-            symLinkItem->setCondition(YaffsItem::CLEAN);
+
+            if (newObjectId != -1) {
+                symLinkItem->setHeaderPosition(newHeaderPos);
+                symLinkItem->setObjectId(newObjectId);
+
+                mSaveInfo->numSymLinksSaved++;
+                symLinkItem->setCondition(YaffsItem::CLEAN);
+            } else {
+                mSaveInfo->numSymLinksFailed++;
+                symLinkItem->setCondition(YaffsItem::ERROR);
+            }
         }
     }
 }

@@ -31,6 +31,7 @@ class Utils {
 public:
     static int identifySelectedRows(const QModelIndexList& selectedRows);
     static bool saveDataToFile(const QString& filename, const char* data, size_t length);
+    static QString randomString(int length);
 };
 
 #endif  //UTILS_H

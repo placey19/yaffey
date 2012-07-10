@@ -40,7 +40,6 @@ YaffsControl::YaffsControl(const char* imageFileName, YaffsControlObserver* obse
     }
 
     mImageFile = NULL;
-    memset(&mSaveInfo, 0, sizeof(YaffsSaveInfo));
 }
 
 YaffsControl::~YaffsControl() {
@@ -94,11 +93,8 @@ int YaffsControl::addRoot(const yaffs_obj_hdr& objectHeader, int& headerPos) {
     int objectId = YAFFS_OBJECTID_ROOT;
     if (!writeHeader(objectHeader, objectId)) {
         objectId = -1;
-        mSaveInfo.numDirsFailed++;
-    } else {
-        mSaveInfo.numDirsSaved++;
     }
-    return YAFFS_OBJECTID_ROOT;
+    return objectId;
 }
 
 int YaffsControl::addDirectory(const yaffs_obj_hdr& objectHeader, int& headerPos) {
@@ -106,9 +102,6 @@ int YaffsControl::addDirectory(const yaffs_obj_hdr& objectHeader, int& headerPos
     int objectId = mObjectId++;
     if (!writeHeader(objectHeader, objectId)) {
         objectId = -1;
-        mSaveInfo.numDirsFailed++;
-    } else {
-        mSaveInfo.numDirsSaved++;
     }
     return objectId;
 }
@@ -144,10 +137,8 @@ int YaffsControl::addFile(const yaffs_obj_hdr& objectHeader, int& headerPos, con
         }
     }
 
-    if (wroteHeader && pagesWritten == pageGoal) {
-        mSaveInfo.numFilesSaved++;
-    } else {
-        mSaveInfo.numFilesFailed++;
+    if (!wroteHeader || pagesWritten != pageGoal) {
+        objectId = -1;
     }
 
     return objectId;
@@ -156,11 +147,8 @@ int YaffsControl::addFile(const yaffs_obj_hdr& objectHeader, int& headerPos, con
 int YaffsControl::addSymLink(const yaffs_obj_hdr& objectHeader, int& headerPos) {
     headerPos = ftell(mImageFile);
     int objectId = mObjectId++;
-    if (writeHeader(objectHeader, objectId)) {
-        mSaveInfo.numSymLinksSaved++;
-    } else {
+    if (!writeHeader(objectHeader, objectId)) {
         objectId = -1;
-        mSaveInfo.numSymLinksFailed++;
     }
     return objectId;
 }

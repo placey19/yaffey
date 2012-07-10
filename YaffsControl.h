@@ -39,16 +39,6 @@ struct YaffsReadInfo {
     int numErrorousObjects;
 };
 
-struct YaffsSaveInfo {
-    bool result;
-    int numFilesSaved;
-    int numFilesFailed;
-    int numDirsSaved;
-    int numDirsFailed;
-    int numSymLinksSaved;
-    int numSymLinksFailed;
-};
-
 class YaffsControl {
 public:
     enum OpenType {
@@ -63,7 +53,6 @@ public:
     bool open(OpenType openType);
     bool readImage();
     YaffsReadInfo getReadInfo() { return mReadInfo; }
-    YaffsSaveInfo getSaveInfo() { return mSaveInfo; }
     char* extractFile(int objectHeaderPos, size_t& bytesExtracted);
     bool updateHeader(int objectHeaderPos, const yaffs_obj_hdr& objectHeader, int objectId);
 
@@ -84,7 +73,6 @@ private:
     FILE* mImageFile;
 
     YaffsReadInfo mReadInfo;
-    YaffsSaveInfo mSaveInfo;
     static u8 mPageData[];
     static u8* mChunkData;
     static u8* mSpareData;
