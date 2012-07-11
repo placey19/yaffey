@@ -152,9 +152,21 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex& itemIndex) {
 }
 
 void MainWindow::on_actionNew_triggered() {
-    newModel();
-    mYaffsModel->newImage("new-yaffs2.img");
-    mUi->statusBar->showMessage("Created new YAFFS2 image");
+    bool doNew = !mYaffsModel->isDirty();
+    if (!doNew) {
+        QMessageBox::StandardButton result = QMessageBox::question(this,
+                                                                   "New",
+                                                                   "Unsaved changes. Are you sure you want to create a new image?",
+                                                                   QMessageBox::Yes | QMessageBox::No,
+                                                                   QMessageBox::No);
+        doNew = (result == QMessageBox::Yes);
+    }
+
+    if (doNew) {
+        newModel();
+        mYaffsModel->newImage("new-yaffs2.img");
+        mUi->statusBar->showMessage("Created new YAFFS2 image");
+    }
 }
 
 void MainWindow::on_actionOpen_triggered() {
@@ -164,7 +176,7 @@ void MainWindow::on_actionOpen_triggered() {
         bool doOpen = !mYaffsModel->isDirty();
         if (!doOpen) {
             QMessageBox::StandardButton result = QMessageBox::question(this,
-                                                                       "Exit",
+                                                                       "Open",
                                                                        "Unsaved changes. Are you sure you want to open the image?",
                                                                        QMessageBox::Yes | QMessageBox::No,
                                                                        QMessageBox::No);
