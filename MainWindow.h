@@ -24,6 +24,7 @@
 #include <QMenu>
 #include <QSignalMapper>
 #include <QDomDocument>
+#include <QCloseEvent>
 
 #include "YaffsModel.h"
 #include "YaffsManager.h"
@@ -67,6 +68,9 @@ private slots:
     void on_treeView_selectionChanged();
     void on_modelChanged();
     void on_dynamicActionTriggered(const QString& menuText);
+
+protected:
+    void closeEvent(QCloseEvent* closeEvent);
 
 private:
     void parseDynamicMenuXml(const QString& xmlFilename);

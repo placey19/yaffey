@@ -214,13 +214,26 @@ void MainWindow::openImage(const QString& imageFilename) {
 
 void MainWindow::on_actionClose_triggered() {
     QString imageFile = mYaffsModel->getImageFilename();
-    if (imageFile.length() > 0) {
-        newModel();
-        mUi->statusBar->showMessage("Closed image file: " + imageFile);
+    bool doClose = !mYaffsModel->isDirty();
+
+    if (!doClose) {
+        QMessageBox::StandardButton result = QMessageBox::question(this,
+                                                                   "Close",
+                                                                   "Unsaved changes. Are you sure you want to close the image?",
+                                                                   QMessageBox::Yes | QMessageBox::No,
+                                                                   QMessageBox::No);
+        doClose = (result == QMessageBox::Yes);
     }
-    mUi->linePath->clear();
-    updateWindowTitle();
-    setupActions();
+
+    if (doClose) {
+        if (imageFile.length() > 0) {
+            newModel();
+            mUi->statusBar->showMessage("Closed image file: " + imageFile);
+        }
+        mUi->linePath->clear();
+        updateWindowTitle();
+        setupActions();
+    }
 }
 
 void MainWindow::on_actionSaveAs_triggered() {
@@ -515,6 +528,24 @@ void MainWindow::on_dynamicActionTriggered(const QString& menuText) {
         }
     } else {
         QMessageBox::critical(this, menuText, "An open image is required for this action");
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent* closeEvent) {
+    bool doClose = !mYaffsModel->isDirty();
+    if (!doClose) {
+        QMessageBox::StandardButton result = QMessageBox::question(this,
+                                                                   "Exit",
+                                                                   "Unsaved changes. Are you sure you want to exit?",
+                                                                   QMessageBox::Yes | QMessageBox::No,
+                                                                   QMessageBox::No);
+        doClose = (result == QMessageBox::Yes);
+    }
+
+    if (doClose) {
+        closeEvent->accept();
+    } else {
+        closeEvent->ignore();
     }
 }
 
