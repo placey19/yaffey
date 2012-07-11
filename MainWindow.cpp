@@ -161,8 +161,20 @@ void MainWindow::on_actionOpen_triggered() {
     QString imageFilename = QFileDialog::getOpenFileName(this, "Open File", ".");
 
     if (imageFilename.length() > 0) {
-        newModel();
-        openImage(imageFilename);
+        bool doOpen = !mYaffsModel->isDirty();
+        if (!doOpen) {
+            QMessageBox::StandardButton result = QMessageBox::question(this,
+                                                                       "Exit",
+                                                                       "Unsaved changes. Are you sure you want to open the image?",
+                                                                       QMessageBox::Yes | QMessageBox::No,
+                                                                       QMessageBox::No);
+            doOpen = (result == QMessageBox::Yes);
+        }
+
+        if (doOpen) {
+            newModel();
+            openImage(imageFilename);
+        }
     }
 }
 
