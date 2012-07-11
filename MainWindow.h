@@ -25,6 +25,7 @@
 #include <QSignalMapper>
 #include <QDomDocument>
 #include <QCloseEvent>
+#include <QSettings>
 
 #include "YaffsModel.h"
 #include "YaffsManager.h"
@@ -89,7 +90,8 @@ private:
     QMenu mHeaderContextMenu;
     QDialog* mFastbootDialog;           //owned
     QSignalMapper* mSignalMapper;       //owned
-    QDomDocument* mDoc;
+    QDomDocument* mDoc;                 //owned
+    QSettings mSettings;
 };
 
 #endif  //MAINWINDOW_H

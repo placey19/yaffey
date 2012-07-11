@@ -32,6 +32,7 @@
 #include "YaffsTreeView.h"
 #include "Utils.h"
 
+static const QString AUTHOR = "DavidPlace";
 static const QString APPNAME = "Yaffey";
 static const QString VERSION = "0.3";
 
@@ -48,12 +49,14 @@ static const char* ATTR_GROUP = "group";
 
 MainWindow::MainWindow(QWidget* parent, QString imageFilename) : QMainWindow(parent),
                                                                  mUi(new Ui::MainWindow),
-                                                                 mContextMenu(this) {
+                                                                 mContextMenu(this),
+                                                                 mSettings(AUTHOR, APPNAME) {
     mUi->setupUi(this);
 
     //create and connect the signal mapper for dynamic actions and parse dynamic menu xml
     mSignalMapper = new QSignalMapper(this);
     connect(mSignalMapper, SIGNAL(mapped(const QString&)), this, SLOT(on_dynamicActionTriggered(const QString&)));
+    mDoc = NULL;
     parseDynamicMenuXml("files/android-menu.xml");
 
     //setup context menu for the treeview
@@ -368,7 +371,7 @@ void MainWindow::on_actionAndroidFastboot_triggered() {
     if (mFastbootDialog) {
         mFastbootDialog->show();
     } else {
-        mFastbootDialog = new DialogFastboot(this);
+        mFastbootDialog = new DialogFastboot(this, mSettings);
         mFastbootDialog->exec();
     }
 }
