@@ -56,7 +56,7 @@ bool Utils::saveDataToFile(const QString& filename, const char* data, size_t len
 }
 
 QString Utils::randomString(int length) {
-    static const QString charset = "abcdefghijklmnopqrstuvwxyz";
+    static QString charset = "abcdefghijklmnopqrstuvwxyz";
     QString str;
 
     int charsetLength = charset.length();
