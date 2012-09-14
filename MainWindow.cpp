@@ -666,6 +666,8 @@ void MainWindow::setupActions() {
     int selectionFlags = Utils::identifySelectedRows(selectedRows);
     int selectionSize = selectedRows.size();
 
+    mUi->actionClose->setEnabled(mYaffsModel->isImageOpen());
+
     if (mYaffsModel->index(0, 0).isValid()) {
         mUi->actionExpandAll->setEnabled(true);
         mUi->actionCollapseAll->setEnabled(true);

@@ -9,16 +9,19 @@
 #include "ui_DialogFastboot.h"
 
 #ifdef _WIN32
-    static const QString FASTBOOT = "fastboot.exe";
-    static const QChar PATH_ENVVAR_SEP = ';';
+    static const char* FASTBOOT = "fastboot.exe";
+    static const QString FASTBOOT_NOEXT = "fastboot";
+    static const char PATH_ENVVAR_SEP = ';';
 #else
-    static const QString FASTBOOT = "fastboot";
-    static const QChar PATH_ENVVAR_SEP = ':';
+    static const char* FASTBOOT = "fastboot";
+    static const QString FASTBOOT_NOEXT = FASTBOOT;
+    static const char PATH_ENVVAR_SEP = ':';
 #endif  //_WIN32
 
 static const QString SETTING_FASTBOOT_FILE = "FASTBOOT";
 static const QString SETTING_IMAGE_FILE = "IMAGE";
 static const QString SETTING_PARTITION = "PARTITION";
+static const int FASTBOOT_EXEC_TIMEOUT = 1 * 1000;
 
 static const char* RED_CROSS = ":/icons/icons/red_cross.png";
 static const char* GREEN_TICK = ":/icons/icons/green_tick.png";
@@ -27,10 +30,11 @@ DialogFastboot::DialogFastboot(QWidget* parent, QSettings& settings) : QDialog(p
                                                                        mUi(new Ui::DialogFastboot),
                                                                        mSettings(settings) {
     mUi->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     mGotFastbootFile = false;
     mGotImageFile = false;
-    mGotDeviceSelected = false;
+    mProcess = NULL;
 
     mUi->boxPartition->addItem("boot");
     mUi->boxPartition->addItem("system");
@@ -40,7 +44,6 @@ DialogFastboot::DialogFastboot(QWidget* parent, QSettings& settings) : QDialog(p
     QString fastboot = findFastboot();
     if (fastboot.length() > 0) {
         mUi->lineFastbootFile->setText(fastboot);
-        checkForConnectedDevices();
     }
 
     //setup image file editbox
@@ -61,6 +64,8 @@ DialogFastboot::~DialogFastboot() {
 }
 
 void DialogFastboot::closeEvent(QCloseEvent* event) {
+    qDebug() << "closeEvent()";
+
     //save fastboot file location if it's valid
     QString fastbootFileText = mUi->lineFastbootFile->text();
     if (validateFastbootFile(fastbootFileText)) {
@@ -84,6 +89,8 @@ void DialogFastboot::closeEvent(QCloseEvent* event) {
 }
 
 void DialogFastboot::on_pushBrowseFastboot_clicked() {
+    qDebug() << "on_pushBrowseFastboot_clicked()";
+
     QString filename = QFileDialog::getOpenFileName(this, "Get fastboot location", ".", FASTBOOT);
     if (filename.length() > 0) {
         mUi->lineFastbootFile->setText(filename);
@@ -91,6 +98,8 @@ void DialogFastboot::on_pushBrowseFastboot_clicked() {
 }
 
 void DialogFastboot::on_pushBrowseImage_clicked() {
+    qDebug() << "on_pushBrowseImage_clicked()";
+
     QString filename = QFileDialog::getOpenFileName(this, "Get fastboot location", ".");
     if (filename.length() > 0) {
         mUi->lineImageFile->setText(filename);
@@ -98,9 +107,7 @@ void DialogFastboot::on_pushBrowseImage_clicked() {
 }
 
 void DialogFastboot::on_lineFastbootFile_textChanged(const QString& text) {
-    if (validateFastbootFile(text)) {
-        checkForConnectedDevices();
-    }
+    validateFastbootFile(text);
     analyzeSelections();
 }
 
@@ -109,107 +116,123 @@ void DialogFastboot::on_lineImageFile_textChanged(const QString& text) {
     analyzeSelections();
 }
 
-void DialogFastboot::on_pushFlash_clicked() {
-    qDebug() << "Flashing...";
+void DialogFastboot::on_pushClearLog_clicked() {
+    mUi->textFastbootLog->clear();
+}
+
+void DialogFastboot::on_pushCancel_clicked() {
+    qDebug() << "on_pushCancel_clicked()";
+
+    if (mProcess != NULL) {
+        mProcess->kill();
+    }
 
     analyzeSelections();
+}
 
-    QString fastbootFilename = mUi->lineFastbootFile->text();
+void DialogFastboot::on_pushFlash_clicked() {
+    qDebug() << "on_pushFlash_clicked()";
 
-    //create fastboot process and setup signals
-    mProcess = new QProcess(this);
-    connect(mProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(on_processStdOutput()));
-    connect(mProcess, SIGNAL(readyReadStandardError()), this, SLOT(on_processStdError()));
-    connect(mProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(on_processFinished(int, QProcess::ExitStatus)));
+    analyzeSelections();
 
     //setup arguments
     QString partition = mUi->boxPartition->currentText();
+    QString imageFile = mUi->lineImageFile->text();
     QStringList args;
     args.append("flash");
     args.append(partition);
+    args.append(imageFile);
 
-    //start process
-    mProcess->start(fastbootFilename, args);
-    if (mProcess->waitForStarted()) {
-
-    } else {
-/*        QMessageBox::critical(this, windowTitle(), KFailedToStart.arg(KProgram));
-        ui->statusBar->showMessage(KAnalysisFailed);*/
-    }
+    //run the command
+    execFastboot(args);
 }
 
 void DialogFastboot::on_pushClose_clicked() {
+    qDebug() << "on_pushClose_clicked()";
     close();
 }
 
-void DialogFastboot::on_listDevices_itemChanged(QListWidgetItem* item) {
-    qDebug() << "on_listDevices_itemChanged";
-    if (item) {
-        mGotDeviceSelected = true;
-    } else {
-        mGotDeviceSelected = false;
-    }
+void DialogFastboot::on_pushFastbootDevices_clicked() {
+    qDebug() << "on_pushFastbootDevices_clicked()";
+    execFastboot(QStringList("devices"));
+}
+
+void DialogFastboot::on_pushFastbootReboot_clicked() {
+    qDebug() << "on_pushFastbootReboot_clicked()";
+    execFastboot(QStringList(""));
+}
+
+void DialogFastboot::on_pushFastbootRebootBootloader_clicked() {
+    qDebug() << "on_pushFastbootReboot_clicked()";
+    execFastboot(QStringList("reboot-bootloader"));
+}
+
+void DialogFastboot::on_processStdOutput() {
+    qDebug() << "on_processStdOutput()";
+
+    QByteArray output = mProcess->readAllStandardOutput();
+    mUi->textFastbootLog->setTextColor(Qt::black);
+    mUi->textFastbootLog->append(output);
+}
+
+void DialogFastboot::on_processStdError() {
+    qDebug() << "on_processStdError()";
+
+    QByteArray output = mProcess->readAllStandardError();
+    mUi->textFastbootLog->setTextColor(Qt::black);
+    mUi->textFastbootLog->append(output);
+}
+
+void DialogFastboot::on_processFinished(int exitCode, QProcess::ExitStatus exitStatus) {
+    qDebug() << "on_processFinished(), exitCode: " << exitCode << ", exitStatus: " << exitStatus;
+
+    QString status = (exitStatus == QProcess::NormalExit ? "NormalExit" : "CrashExit");
+    log("Fastboot finished, code: " + QString::number(exitCode) + ", status: " + status);
+
+    delete mProcess;
+    mProcess = NULL;
 
     analyzeSelections();
 }
 
-void DialogFastboot::on_processStdOutput() {
-    qDebug() << "on_processStdOutput";
-
-    QByteArray output = mProcess->readAllStandardOutput();
-    mUi->textOutput->setTextColor(Qt::black);
-    mUi->textOutput->append(output);
-}
-
-void DialogFastboot::on_processStdError() {
-    qDebug() << "on_processStdError";
-
-    QByteArray output = mProcess->readAllStandardError();
-    mUi->textOutput->setTextColor(Qt::red);
-    mUi->textOutput->append(output);
-}
-
-void DialogFastboot::on_processFinished(int exitCode, QProcess::ExitStatus exitStatus) {
-    qDebug() << "on_processFinished";
-
-    mUi->textOutput->setTextColor(Qt::blue);
-    if (exitStatus == QProcess::NormalExit) {
-        mUi->textOutput->append(" -- process finished, code: " + QString::number(exitCode) + ", status: NormalExit");
-    } else {
-        mUi->textOutput->append(" -- process finished, code: " + QString::number(exitCode) + ", status: CrashExit");
-    }
-}
-
-void DialogFastboot::on_boxPartition_currentIndexChanged(const QString& text) {
+void DialogFastboot::on_boxPartition_currentIndexChanged(const QString& /*text*/) {
     analyzeSelections();
 }
 
 void DialogFastboot::analyzeSelections() {
-    QString commandLine;
-
+    //setup controls
     if (mGotFastbootFile) {
-        //execute fastboot with devices parameter and parse output
-
         mUi->labelFastbootFileStatus->setPixmap(QPixmap(QString::fromUtf8(GREEN_TICK)));
-        commandLine += FASTBOOT;
+        mUi->lineCommandLine->setEnabled(true);
+        mUi->pushFlash->setEnabled(mProcess == NULL && mGotImageFile);
+        mUi->pushFastbootDevices->setEnabled(mProcess == NULL);
+        mUi->pushFastbootReboot->setEnabled(mProcess == NULL);
+        mUi->pushFastbootRebootBootloader->setEnabled(mProcess == NULL);
     } else {
         mUi->labelFastbootFileStatus->setPixmap(QPixmap(QString::fromUtf8(RED_CROSS)));
+        mUi->lineCommandLine->setEnabled(false);
+        mUi->pushFlash->setEnabled(false);
+        mUi->pushFastbootDevices->setEnabled(false);
+        mUi->pushFastbootReboot->setEnabled(false);
+        mUi->pushFastbootRebootBootloader->setEnabled(false);
     }
+    mUi->pushCancel->setEnabled(mProcess != NULL);
 
-    commandLine += " flash ";
-    commandLine += mUi->boxPartition->currentText() + " ";
-
+    //setup command line
+    QString commandLine = FASTBOOT_NOEXT + " flash ";
+    commandLine += mUi->boxPartition->currentText();
     if (mGotImageFile) {
         mUi->labelImageFileStatus->setPixmap(QPixmap(QString::fromUtf8(GREEN_TICK)));
-        commandLine += mUi->lineImageFile->text();
+        commandLine += " " + mUi->lineImageFile->text();
     } else {
         mUi->labelImageFileStatus->setPixmap(QPixmap(QString::fromUtf8(RED_CROSS)));
     }
-
     mUi->lineCommandLine->setText(commandLine);
 }
 
 QString DialogFastboot::findFastboot() {
+    qDebug() << "findFastboot()";
+
     QString result = mSettings.value(SETTING_FASTBOOT_FILE).toString();
 
     QFileInfo settingsFileInfo(result);
@@ -255,21 +278,33 @@ bool DialogFastboot::validateImageFile(const QString& imageFile) {
     return mGotImageFile;
 }
 
-void DialogFastboot::checkForConnectedDevices() {
-    QString fastbootFilename = mUi->lineFastbootFile->text();
-    if (validateFastbootFile(fastbootFilename)) {
+void DialogFastboot::execFastboot(const QStringList& args) {
+    if (mProcess == NULL) {
+        QString fastbootFilename = mUi->lineFastbootFile->text();
+
         //create fastboot process and setup signals
         mProcess = new QProcess(this);
         connect(mProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(on_processStdOutput()));
         connect(mProcess, SIGNAL(readyReadStandardError()), this, SLOT(on_processStdError()));
         connect(mProcess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(on_processFinished(int, QProcess::ExitStatus)));
 
-        //setup arguments
-        QStringList args;
-        args.append("devices");
+        //show command in output
+        QString flatCmd = args.join(" ");
+        log("Executing: " + FASTBOOT_NOEXT + " " + flatCmd);
 
         //start process
         mProcess->start(fastbootFilename, args);
-        mProcess->waitForStarted();
+        if (!mProcess->waitForStarted(FASTBOOT_EXEC_TIMEOUT)) {
+            log("Failed to start fastboot");
+            delete mProcess;
+            mProcess = NULL;
+        }
     }
+
+    analyzeSelections();
+}
+
+void DialogFastboot::log(const QString& text) {
+    mUi->textFastbootLog->setTextColor(Qt::blue);
+    mUi->textFastbootLog->append(" -- " + text);
 }

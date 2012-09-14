@@ -21,7 +21,11 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned u32;
-typedef unsigned loff_t;
+#ifdef WIN32
+    typedef unsigned loff_t;
+#else
+    #include <sys/types.h>
+#endif  //_WIN32
 
 #define YAFFS_MAX_NAME_LENGTH           255
 #define YAFFS_MAX_ALIAS_LENGTH          159

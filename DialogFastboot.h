@@ -27,9 +27,13 @@ private slots:
     void on_pushBrowseImage_clicked();
     void on_lineFastbootFile_textChanged(const QString& text);
     void on_lineImageFile_textChanged(const QString& text);
+    void on_pushClearLog_clicked();
+    void on_pushCancel_clicked();
     void on_pushFlash_clicked();
+    void on_pushFastbootDevices_clicked();
+    void on_pushFastbootReboot_clicked();
+    void on_pushFastbootRebootBootloader_clicked();
     void on_pushClose_clicked();
-    void on_listDevices_itemChanged(QListWidgetItem* item);
     void on_processStdOutput();
     void on_processStdError();
     void on_processFinished(int exitCode, QProcess::ExitStatus exitStatus);
@@ -40,14 +44,14 @@ private:
     QString findFastboot();
     bool validateFastbootFile(const QString& fastbootFile);
     bool validateImageFile(const QString& imageFile);
-    void checkForConnectedDevices();
+    void execFastboot(const QStringList& args);
+    void log(const QString& text);
 
 private:
     Ui::DialogFastboot* mUi;
     QSettings& mSettings;
     bool mGotFastbootFile;
     bool mGotImageFile;
-    bool mGotDeviceSelected;
     QProcess* mProcess;
 };
 

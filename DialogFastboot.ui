@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>400</height>
+    <width>700</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,18 +15,29 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="labelFastbootFile">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="3">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="lineFastbootFile">
+         <property name="toolTip">
+          <string>fastboot executable location</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelFastbootExecutable">
        <property name="minimumSize">
         <size>
-         <width>82</width>
+         <width>100</width>
          <height>23</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>82</width>
+         <width>100</width>
          <height>23</height>
         </size>
        </property>
@@ -35,7 +46,7 @@
        </property>
       </widget>
      </item>
-     <item>
+     <item row="0" column="1">
       <widget class="QLabel" name="labelFastbootFileStatus">
        <property name="minimumSize">
         <size>
@@ -60,10 +71,7 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLineEdit" name="lineFastbootFile"/>
-     </item>
-     <item>
+     <item row="0" column="4">
       <widget class="QPushButton" name="pushBrowseFastboot">
        <property name="minimumSize">
         <size>
@@ -77,35 +85,37 @@
          <height>23</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>browse for fastboot executable</string>
+       </property>
        <property name="text">
         <string>Browse</string>
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QLabel" name="labelImageFile">
+     <item row="1" column="4">
+      <widget class="QPushButton" name="pushBrowseImage">
        <property name="minimumSize">
         <size>
-         <width>82</width>
+         <width>0</width>
          <height>23</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>82</width>
+         <width>16777215</width>
          <height>23</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>browse for image to flash</string>
+       </property>
        <property name="text">
-        <string>Image file</string>
+        <string>Browse</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="1" column="1">
       <widget class="QLabel" name="labelImageFileStatus">
        <property name="minimumSize">
         <size>
@@ -130,85 +140,101 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLineEdit" name="lineImageFile"/>
+     <item row="1" column="3">
+      <widget class="QLineEdit" name="lineImageFile">
+       <property name="toolTip">
+        <string>image file to flash</string>
+       </property>
+      </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="pushBrowseImage">
+     <item row="1" column="0">
+      <widget class="QLabel" name="labelImageFile">
        <property name="minimumSize">
         <size>
-         <width>0</width>
+         <width>100</width>
          <height>23</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>16777215</width>
+         <width>100</width>
          <height>23</height>
         </size>
        </property>
        <property name="text">
-        <string>Browse</string>
+        <string>Image file</string>
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="30,70">
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QLabel" name="labelPartition">
-         <property name="text">
-          <string>Partition to flash</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="boxPartition"/>
-       </item>
-       <item>
-        <widget class="QLabel" name="labelDevices">
-         <property name="text">
-          <string>Devices</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QListWidget" name="listDevices"/>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QLabel" name="labelOutput">
-         <property name="text">
-          <string>Fastboot output</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTextEdit" name="textOutput"/>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
-     <item>
-      <widget class="QLabel" name="labelCommandLine">
+     <item row="2" column="0">
+      <widget class="QLabel" name="labelFastbootLog">
        <property name="text">
-        <string>Command line</string>
+        <string>Fastboot output</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLineEdit" name="lineCommandLine"/>
+     <item row="2" column="4">
+      <widget class="QPushButton" name="pushClearLog">
+       <property name="toolTip">
+        <string>clear log</string>
+       </property>
+       <property name="text">
+        <string>Clear</string>
+       </property>
+      </widget>
      </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
+      <widget class="QTextEdit" name="textFastbootLog">
+       <property name="font">
+        <font>
+         <family>Courier New</family>
+        </font>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="50,50">
+       <item>
+        <widget class="QComboBox" name="boxPartition">
+         <property name="toolTip">
+          <string>partition to flash</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="labelPartition">
+       <property name="text">
+        <string>Partition to flash</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
       <widget class="QPushButton" name="pushFlash">
        <property name="minimumSize">
         <size>
@@ -222,29 +248,22 @@
          <height>23</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>flash device</string>
+       </property>
        <property name="text">
         <string>Flash</string>
        </property>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+     <item row="2" column="0">
+      <widget class="QLabel" name="labelCommandLine">
+       <property name="text">
+        <string>Command line</string>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
+      </widget>
      </item>
-     <item>
+     <item row="3" column="2">
       <widget class="QPushButton" name="pushClose">
        <property name="minimumSize">
         <size>
@@ -258,8 +277,112 @@
          <height>23</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>close dialog</string>
+       </property>
        <property name="text">
         <string>Close</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineCommandLine">
+       <property name="toolTip">
+        <string>flash command line</string>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="pushFastbootDevices">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>fastboot devices</string>
+         </property>
+         <property name="text">
+          <string>devices</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushFastbootReboot">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>fastboot reboot</string>
+         </property>
+         <property name="text">
+          <string>reboot</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushFastbootRebootBootloader">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>fastboot reboot-bootloader</string>
+         </property>
+         <property name="text">
+          <string>reboot-bootloader</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="labelFastboot">
+       <property name="text">
+        <string>Fastboot</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QPushButton" name="pushCancel">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>cancel flashing</string>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
        </property>
       </widget>
      </item>

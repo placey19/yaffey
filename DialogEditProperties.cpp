@@ -31,6 +31,7 @@ DialogEditProperties::DialogEditProperties(YaffsModel& yaffsModel,
                                                               mYaffsModel(yaffsModel),
                                                               mSelectedRows(selectedRows) {
     mUi->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     int selectionFlags = Utils::identifySelectedRows(selectedRows);
     if (selectionFlags & SELECTED_SINGLE) {

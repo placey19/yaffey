@@ -4,6 +4,7 @@
 DialogImport::DialogImport(QWidget* parent) : QDialog(parent),
                                               mUi(new Ui::DialogImport) {
     mUi->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 }
 
 DialogImport::~DialogImport() {
