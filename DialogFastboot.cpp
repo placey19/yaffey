@@ -159,7 +159,7 @@ void DialogFastboot::on_pushFastbootDevices_clicked() {
 
 void DialogFastboot::on_pushFastbootReboot_clicked() {
     qDebug() << "on_pushFastbootReboot_clicked()";
-    execFastboot(QStringList(""));
+    execFastboot(QStringList("reboot"));
 }
 
 void DialogFastboot::on_pushFastbootRebootBootloader_clicked() {
