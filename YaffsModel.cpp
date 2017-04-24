@@ -285,7 +285,7 @@ void YaffsModel::saveDirectory(YaffsItem* dirItem) {
             if (!isRoot) {
                 mSaveInfo->numDirsFailed++;
             }
-            dirItem->setCondition(YaffsItem::ERROR);
+            dirItem->setCondition(YaffsItem::ERR);
         }
     }
 }
@@ -309,7 +309,7 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                 if (file) {
                     size_t bytesRead = fread(data, 1, filesize, file);
                     if (bytesRead == filesize) {
-                        newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
+                        newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, static_cast<int>(filesize));
                     }
                     fclose(file);
                 }
@@ -322,7 +322,7 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                     size_t bytesExtracted = 0;
                     char* data = yaffsControl.extractFile(headerPosition, bytesExtracted);
                     if (bytesExtracted == filesize) {
-                        newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, filesize);
+                        newObjectId = mYaffsSaveControl->addFile(fileItem->getHeader(), newHeaderPos, data, static_cast<int>(filesize));
                     }
                 }
             }
@@ -335,7 +335,7 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                 fileItem->setCondition(YaffsItem::CLEAN);
             } else {
                 mSaveInfo->numFilesFailed++;
-                fileItem->setCondition(YaffsItem::ERROR);
+                fileItem->setCondition(YaffsItem::ERR);
             }
         }
     }
@@ -357,7 +357,7 @@ void YaffsModel::saveSymLink(YaffsItem* symLinkItem) {
                 symLinkItem->setCondition(YaffsItem::CLEAN);
             } else {
                 mSaveInfo->numSymLinksFailed++;
-                symLinkItem->setCondition(YaffsItem::ERROR);
+                symLinkItem->setCondition(YaffsItem::ERR);
             }
         }
     }
@@ -558,7 +558,7 @@ int YaffsModel::rowCount(const QModelIndex& parentIndex) const {
     return count;
 }
 
-int YaffsModel::columnCount(const QModelIndex& parentIndex) const {
+int YaffsModel::columnCount(const QModelIndex& /*parentIndex*/) const {
     return YaffsItem::COLUMN_COUNT;
 }
 

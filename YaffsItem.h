@@ -49,7 +49,7 @@ public:
         DIRTY,
         NEW,
         MOVED,
-        ERROR
+        ERR
     };
 
     enum Column {

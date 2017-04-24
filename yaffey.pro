@@ -6,6 +6,8 @@
 
 QT        += core gui xml
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 TARGET     = yaffey
 TEMPLATE   = app
 RC_FILE    = yaffey.rc

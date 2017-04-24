@@ -21,6 +21,7 @@
 #include <QDragEnterEvent>
 #include <QUrl>
 #include <QDir>
+#include <QMimeData>
 
 #include "YaffsTreeView.h"
 #include "YaffsItem.h"
@@ -65,7 +66,7 @@ void YaffsTreeView::dragMoveEvent(QDragMoveEvent* event) {
     }
 }
 
-void YaffsTreeView::dragLeaveEvent(QDragLeaveEvent* event) {
+void YaffsTreeView::dragLeaveEvent(QDragLeaveEvent* /*event*/) {
     qDebug() << "dragLeaveEvent";
 }
 

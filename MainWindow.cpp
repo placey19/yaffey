@@ -86,19 +86,19 @@ MainWindow::MainWindow(QWidget* parent, QString imageFilename) : QMainWindow(par
 
     QHeaderView* headerView = mUi->treeView->header();
     headerView->setContextMenuPolicy(Qt::CustomContextMenu);
-    headerView->setResizeMode(YaffsItem::NAME, QHeaderView::Stretch);
-    headerView->setResizeMode(YaffsItem::SIZE, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::PERMISSIONS, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::ALIAS, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::DATE_ACCESSED, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::DATE_CREATED, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::DATE_MODIFIED, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::USER, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::GROUP, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::NAME, QHeaderView::Stretch);
+    headerView->setSectionResizeMode(YaffsItem::SIZE, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::PERMISSIONS, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::ALIAS, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::DATE_ACCESSED, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::DATE_CREATED, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::DATE_MODIFIED, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::USER, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::GROUP, QHeaderView::ResizeToContents);
 #ifdef QT_DEBUG
-    headerView->setResizeMode(YaffsItem::OBJECTID, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::PARENTID, QHeaderView::ResizeToContents);
-    headerView->setResizeMode(YaffsItem::HEADERPOS, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::OBJECTID, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::PARENTID, QHeaderView::ResizeToContents);
+    headerView->setSectionResizeMode(YaffsItem::HEADERPOS, QHeaderView::ResizeToContents);
 #endif  //QT_DEBUG
 
     mUi->treeView->hideColumn(YaffsItem::DATE_CREATED);

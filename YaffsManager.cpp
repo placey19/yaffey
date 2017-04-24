@@ -58,7 +58,7 @@ YaffsExportInfo* YaffsManager::exportItems(QModelIndexList itemIndices, const QS
     return mYaffsExportInfo;
 }
 
-void YaffsManager::on_model_DataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight) {
+void YaffsManager::on_model_DataChanged(const QModelIndex& /*topLeft*/, const QModelIndex& /*bottomRight*/) {
     emit modelChanged();
 }
 
@@ -130,7 +130,7 @@ void YaffsManager::exportDirectory(const YaffsItem* item, const QString& path) {
     }
 }
 
-void YaffsManager::exportSymLink(const YaffsItem* item, const QString& path) {
+void YaffsManager::exportSymLink(const YaffsItem* /*item*/, const QString& /*path*/) {
 /*
     if (item->isSymLink()) {
         QFile file(path + QDir::separator() + item->getName() + ".symlink");
