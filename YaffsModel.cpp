@@ -313,7 +313,7 @@ void YaffsModel::saveFile(YaffsItem* fileItem) {
                     }
                     fclose(file);
                 }
-                delete data;
+                delete [] data;
             //the data is in the opened image so get the it from there
             } else {
                 int headerPosition = fileItem->getHeaderPosition();

@@ -43,6 +43,9 @@ public:
     YaffsModel(QObject* parent = 0);
     ~YaffsModel();
 
+    // prevent compiler warning about the removeRows() method below by explicitly stating it's not meant to be an override
+    using QAbstractItemModel::removeRows;
+
     void newImage(const QString& newImageName);
     YaffsReadInfo openImage(const QString& imageFilename);
     YaffsItem* importFile(const QString& externalFilenameWithPath, const QString& internalFilenameWithPath, uint uid, uint gid, uint permissions);

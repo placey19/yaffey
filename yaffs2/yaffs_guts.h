@@ -23,6 +23,8 @@ typedef unsigned short u16;
 typedef unsigned u32;
 #ifdef WIN32
     typedef unsigned loff_t;
+#elif __APPLE__
+    typedef unsigned loff_t;
 #else
     #include <sys/types.h>
 #endif  //_WIN32

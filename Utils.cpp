@@ -46,7 +46,7 @@ bool Utils::saveDataToFile(const QString& filename, const char* data, size_t len
     bool open = file.open(QIODevice::WriteOnly);
     if (open) {
         if (length > 0) {
-            result = (file.write(data, length) == length);
+            result = (file.write(data, length) == (qint64)length);
         } else if (data == NULL) {
             result = true;
         }
